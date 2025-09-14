@@ -29,12 +29,10 @@
       min-height: 100vh;
       margin: 0;
       
-      /* --- NEW CODE: Background image from Google --- */
       background-image: url('https://googleusercontent.com/image_collection/image_retrieval/16221347123575330833');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
-      /* --- END NEW CODE --- */
     }
 
     .container {
@@ -42,7 +40,7 @@
       max-width: 700px;
       padding: 30px;
       text-align: center;
-      background-color: rgba(41, 42, 45, 0.95); /* Semi-transparent to show background */
+      background-color: rgba(41, 42, 45, 0.95);
       border-radius: var(--border-radius);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -63,7 +61,6 @@
     h1 { font-weight: 700; }
     h2 { font-weight: 500; }
     
-    /* --- NEW CODE: Timer style --- */
     #timer-display {
       font-size: 3em;
       font-weight: 700;
@@ -83,7 +80,6 @@
       50% { transform: scale(1.05); }
       100% { transform: scale(1); }
     }
-    /* --- END NEW CODE --- */
 
     #registration-container {
       margin-bottom: 30px;
@@ -149,7 +145,6 @@
       display: flex;
       flex-direction: column;
       gap: 15px;
-      margin-top: 20px;
     }
 
     .option-button {
@@ -240,7 +235,10 @@
   
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    // --- NEW CODE: Connect to your live server URL ---
+    // You MUST replace "https://your-app-name.onrender.com" with the actual URL
+    const socket = io("https://your-app-name.onrender.com");
+    // --- END NEW CODE ---
 
     const registrationContainer = document.getElementById('registration-container');
     const registerButton = document.getElementById('register-button');
@@ -250,10 +248,7 @@
     const questionText = document.getElementById('question-text');
     const optionsContainer = document.getElementById('options-container');
     const leaderboardTitle = document.getElementById('leaderboard-title');
-    
-    // --- NEW CODE: Timer element reference ---
     const timerDisplay = document.getElementById('timer-display');
-    // --- END NEW CODE ---
 
     registerButton.addEventListener('click', () => {
       const userName = usernameInput.value.trim();
@@ -266,8 +261,7 @@
         alert('Please enter a name!');
       }
     });
-    
-    // --- NEW CODE: Listen for timer updates ---
+
     socket.on('timerUpdate', (timeLeft) => {
         timerDisplay.textContent = timeLeft;
         if (timeLeft <= 5) {
@@ -276,7 +270,6 @@
             timerDisplay.classList.remove('low-time');
         }
     });
-    // --- END NEW CODE ---
 
     socket.on('newQuestion', (questionData) => {
       questionText.textContent = `Question ${questionData.questionNumber}: ${questionData.question}`;

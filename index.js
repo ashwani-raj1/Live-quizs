@@ -1,11 +1,18 @@
 // index.js
 const express = require('express');
 const http = require('http');
+const cors = require('cors'); // NEW
 const { Server } = require('socket.io');
 
 const app = express();
+app.use(cors()); // NEW
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Allows any origin to connect, be careful in production
+        methods: ["GET", "POST"]
+    }
+});
 
 const users = [];
 
@@ -40,13 +47,10 @@ const quizQuestions = [
 let currentQuestionIndex = 0;
 let quizActive = false;
 let questionTimer = null;
-const QUESTION_DURATION = 15000; // 15 seconds
-
-// --- NEW CODE: Countdown interval ---
 let countdownInterval = null;
+const QUESTION_DURATION = 15000;
 
 function sendNextQuestion() {
-  // Clear any previous timers and intervals
   if (questionTimer) clearTimeout(questionTimer);
   if (countdownInterval) clearInterval(countdownInterval);
 
@@ -58,11 +62,9 @@ function sendNextQuestion() {
       questionNumber: currentQuestionIndex + 1
     };
     
-    // --- NEW CODE: Send the initial timer value ---
     let timeLeft = QUESTION_DURATION / 1000;
     io.emit('timerUpdate', timeLeft);
 
-    // Start a new countdown
     countdownInterval = setInterval(() => {
         timeLeft--;
         io.emit('timerUpdate', timeLeft);
@@ -72,7 +74,6 @@ function sendNextQuestion() {
     console.log(`Sending Question ${currentQuestionIndex + 1}: ${questionData.question}`);
 
     questionTimer = setTimeout(() => {
-      // Clear the countdown interval when the time runs out
       clearInterval(countdownInterval);
       currentQuestionIndex++;
       sendNextQuestion();
@@ -105,52 +106,11 @@ function handleAnswer(socket, answer) {
 }
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+  res.send('Server is running. Access the frontend via GitHub Pages.');
 });
 
-io.on('connection', (socket) => {
-  console.log('A user connected');
-
-  socket.on('register', (userName) => {
-    const newUser = {
-      id: socket.id,
-      name: userName,
-      score: 0,
-    };
-    users.push(newUser);
-    console.log(`User registered: ${newUser.name}`);
-    io.emit('updateLeaderboard', users);
-
-    if (!quizActive && users.length >= 1) {
-      quizActive = true;
-      currentQuestionIndex = 0;
-      console.log("Starting quiz...");
-      sendNextQuestion();
-    }
-  });
-
-  socket.on('submitAnswer', (answer) => {
-    handleAnswer(socket, answer);
-  });
-
-  socket.on('disconnect', () => {
-    const index = users.findIndex(user => user.id === socket.id);
-    if (index !== -1) {
-      const user = users[index];
-      users.splice(index, 1);
-      console.log(`${user.name} disconnected.`);
-      io.emit('updateLeaderboard', users);
-      
-      if (users.length === 0 && questionTimer) {
-        clearTimeout(questionTimer);
-        clearInterval(countdownInterval);
-        quizActive = false;
-        console.log("All users disconnected. Quiz stopped.");
-      }
-    }
-  });
-});
-
-server.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+// NEW: Use the port provided by the hosting service
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
