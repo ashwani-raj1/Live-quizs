@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Quiz Live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --google-blue: #4285F4;
+      --google-red: #EA4335;
+      --google-yellow: #FBBC05;
+      --google-green: #34A853;
+      
+      --dark-bg: #202124;
+      --card-bg: #292a2d;
+      --text-color: #E8EAED;
+      --border-radius: 16px;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--dark-bg);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      
+      /* --- NEW CODE: Background image from Google --- */
+      background-image: url('https://googleusercontent.com/image_collection/image_retrieval/16221347123575330833');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      /* --- END NEW CODE --- */
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      padding: 30px;
+      text-align: center;
+      background-color: rgba(41, 42, 45, 0.95); /* Semi-transparent to show background */
+      border-radius: var(--border-radius);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .logo {
+        width: 100px;
+        margin-bottom: 20px;
+    }
+
+    h1, h2 {
+      font-weight: 500;
+      color: var(--google-blue);
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    
+    h1 { font-weight: 700; }
+    h2 { font-weight: 500; }
+    
+    /* --- NEW CODE: Timer style --- */
+    #timer-display {
+      font-size: 3em;
+      font-weight: 700;
+      color: var(--google-yellow);
+      margin-top: -10px;
+      margin-bottom: 20px;
+      transition: color 0.5s;
+    }
+    
+    #timer-display.low-time {
+      color: var(--google-red);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    /* --- END NEW CODE --- */
+
+    #registration-container {
+      margin-bottom: 30px;
+    }
+
+    #username-input {
+      padding: 12px 15px;
+      width: 70%;
+      max-width: 300px;
+      border: 1px solid #5F6368;
+      background-color: transparent;
+      border-radius: 8px;
+      color: var(--text-color);
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    #username-input:focus {
+      outline: none;
+      border-color: var(--google-blue);
+    }
+
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      background-color: var(--google-blue);
+      color: var(--text-color);
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+      margin-left: 10px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      background-color: #6a9cfd;
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    #quiz-container {
+      display: none;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+    }
+
+    #question-text {
+      font-size: 24px;
+      font-weight: 400;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+
+    #options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .option-button {
+      background-color: #3C4043;
+      border: none;
+      color: var(--text-color);
+      font-size: 16px;
+      font-weight: 400;
+      padding: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s, border 0.2s;
+    }
+
+    .option-button:hover:not([disabled]) {
+      background-color: #5F6368;
+    }
+    
+    .option-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .option-button.correct {
+        background-color: var(--google-green);
+        border: 2px solid var(--google-green);
+    }
+    
+    .option-button.incorrect {
+        background-color: var(--google-red);
+        border: 2px solid var(--google-red);
+    }
+
+    #leaderboard {
+      width: 100%;
+    }
+
+    #leaderboard-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #leaderboard-list li {
+      background-color: var(--dark-bg);
+      padding: 15px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+      font-weight: 500;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    #leaderboard-list li:nth-child(1) { color: var(--google-blue); }
+    #leaderboard-list li:nth-child(2) { color: var(--google-green); }
+    #leaderboard-list li:nth-child(3) { color: var(--google-yellow); }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google Logo" class="logo">
+    <h1>Google Trivia Live</h1>
+
+    <div id="registration-container">
+      <input type="text" id="username-input" placeholder="Enter your name">
+      <button id="register-button" class="btn">Join the Quiz</button>
+    </div>
+
+    <div id="quiz-container">
+      <div id="timer-display">15</div>
+      <h2 id="question-text"></h2>
+      <div id="options-container">
+      </div>
+    </div>
+    
+    <h2 id="leaderboard-title">Live Leaderboard</h2>
+    <div id="leaderboard">
+      <ul id="leaderboard-list">
+      </ul>
+    </div>
+  </div>
+  
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const registrationContainer = document.getElementById('registration-container');
+    const registerButton = document.getElementById('register-button');
+    const usernameInput = document.getElementById('username-input');
+    const leaderboardList = document.getElementById('leaderboard-list');
+    const quizContainer = document.getElementById('quiz-container');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const leaderboardTitle = document.getElementById('leaderboard-title');
+    
+    // --- NEW CODE: Timer element reference ---
+    const timerDisplay = document.getElementById('timer-display');
+    // --- END NEW CODE ---
+
+    registerButton.addEventListener('click', () => {
+      const userName = usernameInput.value.trim();
+      if (userName) {
+        socket.emit('register', userName);
+        registrationContainer.style.display = 'none';
+        quizContainer.style.display = 'block';
+        leaderboardTitle.textContent = "Live Leaderboard";
+      } else {
+        alert('Please enter a name!');
+      }
+    });
+    
+    // --- NEW CODE: Listen for timer updates ---
+    socket.on('timerUpdate', (timeLeft) => {
+        timerDisplay.textContent = timeLeft;
+        if (timeLeft <= 5) {
+            timerDisplay.classList.add('low-time');
+        } else {
+            timerDisplay.classList.remove('low-time');
+        }
+    });
+    // --- END NEW CODE ---
+
+    socket.on('newQuestion', (questionData) => {
+      questionText.textContent = `Question ${questionData.questionNumber}: ${questionData.question}`;
+      optionsContainer.innerHTML = '';
+      
+      questionData.options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'option-button';
+        button.textContent = option;
+        
+        button.addEventListener('click', () => {
+          socket.emit('submitAnswer', option);
+          Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+        });
+        
+        optionsContainer.appendChild(button);
+      });
+    });
+    
+    socket.on('answerResult', ({ isCorrect, correctAnswer }) => {
+      const clickedButton = Array.from(optionsContainer.children).find(btn => !btn.disabled);
+      
+      if (isCorrect) {
+        if (clickedButton) clickedButton.classList.add('correct');
+      } else {
+        if (clickedButton) clickedButton.classList.add('incorrect');
+      }
+    });
+
+    socket.on('quizFinished', () => {
+      questionText.textContent = "The quiz has ended! Final scores are below.";
+      optionsContainer.innerHTML = '';
+      leaderboardTitle.textContent = "Final Leaderboard";
+      timerDisplay.style.display = 'none';
+    });
+
+    socket.on('updateLeaderboard', (users) => {
+      leaderboardList.innerHTML = '';
+      const sortedUsers = users.sort((a, b) => b.score - a.score);
+
+      sortedUsers.forEach(user => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${user.name}: ${user.score}`;
+        leaderboardList.appendChild(listItem);
+      });
+    });
+  </script>
+</body>
+</html>
