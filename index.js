@@ -44,6 +44,32 @@ const quizQuestions = [
     question: "What is the name of the company that owns Google?",
     options: ["Alphabet Inc.", "Microsoft", "Meta", "Google X"],
     answer: "Alphabet Inc."
+  },
+  // --- New Questions Added Below ---
+  {
+    question: "What is the name of Google's cloud storage service?",
+    options: ["Google Cloud", "Google Drive", "Google Photos", "Google Docs"],
+    answer: "Google Drive"
+  },
+  {
+    question: "What is the programming language that was developed by Google?",
+    options: ["Python", "Java", "Go", "C++"],
+    answer: "Go"
+  },
+  {
+    question: "What is the name of Google's headquarter complex?",
+    options: ["Google HQ", "The Campus", "Googleplex", "Google Park"],
+    answer: "Googleplex"
+  },
+  {
+    question: "What is the name of Google's AI assistant?",
+    options: ["Siri", "Alexa", "Cortana", "Google Assistant"],
+    answer: "Google Assistant"
+  },
+  {
+    question: "What is the official name of the Google logo with the 'G' and four colors?",
+    options: ["The Google G", "The Alphabet", "The Logomark", "The Google Mark"],
+    answer: "The Google Mark"
   }
 ];
 
