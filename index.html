@@ -212,7 +212,7 @@
 <body>
   <div class="container">
     <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google Logo" class="logo">
-    <h1>Google Ashwani Live</h1>
+    <h1>Google Trivia Live</h1>
 
     <div id="registration-container">
       <input type="text" id="username-input" placeholder="Enter your name">
@@ -233,10 +233,9 @@
     </div>
   </div>
   
-  <script src="https://<YOUR-RENDER-URL-HERE>/socket.io/socket.io.js"></script>
+  <script src="https://gdg-on-campus-quiz.onrender.com/socket.io/socket.io.js"></script>
   <script>
-    // This line also must point to your live server's URL.
-    const socket = io("https://<YOUR-RENDER-URL-HERE>");
+    const socket = io("https://gdg-on-campus-quiz.onrender.com");
 
     const registrationContainer = document.getElementById('registration-container');
     const registerButton = document.getElementById('register-button');
