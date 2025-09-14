@@ -9,10 +9,9 @@ app.use(cors());
 
 const server = http.createServer(app);
 
-// Explicitly configure Socket.IO for CORS
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allows any origin, including your GitHub Pages URL
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
@@ -44,6 +43,31 @@ const quizQuestions = [
     question: "What is the name of the company that owns Google?",
     options: ["Alphabet Inc.", "Microsoft", "Meta", "Google X"],
     answer: "Alphabet Inc."
+  },
+  {
+    question: "What is the name of Google's cloud storage service?",
+    options: ["Google Cloud", "Google Drive", "Google Photos", "Google Docs"],
+    answer: "Google Drive"
+  },
+  {
+    question: "What is the programming language that was developed by Google?",
+    options: ["Python", "Java", "Go", "C++"],
+    answer: "Go"
+  },
+  {
+    question: "What is the name of Google's headquarter complex?",
+    options: ["Google HQ", "The Campus", "Googleplex", "Google Park"],
+    answer: "Googleplex"
+  },
+  {
+    question: "What is the name of Google's AI assistant?",
+    options: ["Siri", "Alexa", "Cortana", "Google Assistant"],
+    answer: "Google Assistant"
+  },
+  {
+    question: "What is the official name of the Google logo with the 'G' and four colors?",
+    options: ["The Google G", "The Alphabet", "The Logomark", "The Google Mark"],
+    answer: "The Google Mark"
   }
 ];
 
@@ -108,12 +132,10 @@ function handleAnswer(socket, answer) {
   socket.emit('answerResult', { isCorrect, correctAnswer });
 }
 
-// Serve a basic message to the public URL
 app.get('/', (req, res) => {
   res.send('Server is running. Access the frontend via GitHub Pages.');
 });
 
-// The port Render provides is in an environment variable
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
