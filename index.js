@@ -1,15 +1,18 @@
 // index.js
 const express = require('express');
 const http = require('http');
-const cors = require('cors'); // NEW
+const cors = require('cors');
 const { Server } = require('socket.io');
 
 const app = express();
-app.use(cors()); // NEW
+app.use(cors()); 
+
 const server = http.createServer(app);
+
+// Explicitly configure Socket.IO for CORS
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allows any origin to connect, be careful in production
+        origin: "*", // Allows any origin, including your GitHub Pages URL
         methods: ["GET", "POST"]
     }
 });
@@ -105,11 +108,12 @@ function handleAnswer(socket, answer) {
   socket.emit('answerResult', { isCorrect, correctAnswer });
 }
 
+// Serve a basic message to the public URL
 app.get('/', (req, res) => {
   res.send('Server is running. Access the frontend via GitHub Pages.');
 });
 
-// NEW: Use the port provided by the hosting service
+// The port Render provides is in an environment variable
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
