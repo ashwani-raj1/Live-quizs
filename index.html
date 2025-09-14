@@ -83,14 +83,17 @@
       border-radius: 8px;
       margin-bottom: 20px;
       font-weight: 500;
+      display: none; /* Initially hidden */
     }
     
     #connection-status.connected {
+      display: block;
       background-color: rgba(52, 168, 83, 0.2);
       color: var(--google-green);
     }
     
     #connection-status.disconnected {
+      display: block;
       background-color: rgba(234, 67, 53, 0.2);
       color: var(--google-red);
     }
@@ -322,6 +325,7 @@
     </div>
   </div>
   
+  <script src="https://gdg-on-campus-quiz.onrender.com/socket.io/socket.io.js"></script>
   <script>
     // Fallback quiz questions for demo/offline mode
     const fallbackQuestions = [
@@ -372,6 +376,7 @@
     let currentQuestionIndex = 0;
     let quizStarted = false;
     let offlineMode = false;
+    let offlineTimer = null;
 
     // Initialize connection
     function initializeConnection() {
@@ -428,14 +433,6 @@
           updateLeaderboard(serverUsers);
         });
 
-        // Timeout for connection
-        setTimeout(() => {
-          if (!isConnected && !offlineMode) {
-            console.log('Connection timeout - starting offline mode');
-            startOfflineMode();
-          }
-        }, 10000);
-
       } catch (error) {
         console.error('Failed to initialize socket connection:', error);
         startOfflineMode();
@@ -447,7 +444,6 @@
       connectionStatus.textContent = 'Demo Mode - Experience the quiz locally';
       connectionStatus.className = 'disconnected';
       
-      // Add some demo users to leaderboard
       users = [
         { name: 'Demo Player 1', score: 30 },
         { name: 'Demo Player 2', score: 20 },
@@ -483,19 +479,16 @@
     }
 
     function handleAnswerClick(answer) {
-      // Disable all buttons
       Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
       
       if (isConnected && socket) {
         socket.emit('submitAnswer', answer);
       } else {
-        // Offline mode - simulate answer checking
         const currentQuestion = fallbackQuestions[currentQuestionIndex];
         const isCorrect = answer === currentQuestion.answer;
         
         if (isCorrect && currentUser) {
           currentUser.score += 10;
-          // Update user in users array
           const userIndex = users.findIndex(u => u.name === currentUser.name);
           if (userIndex >= 0) {
             users[userIndex] = currentUser;
@@ -505,7 +498,6 @@
         
         showAnswerResult(isCorrect, currentQuestion.answer);
         
-        // Auto advance to next question after 2 seconds
         setTimeout(() => {
           currentQuestionIndex++;
           if (currentQuestionIndex < fallbackQuestions.length) {
@@ -529,35 +521,36 @@
     }
 
     function displayOfflineQuestion() {
-      if (currentQuestionIndex < fallbackQuestions.length) {
-        const questionData = {
-          question: fallbackQuestions[currentQuestionIndex].question,
-          options: fallbackQuestions[currentQuestionIndex].options,
-          questionNumber: currentQuestionIndex + 1
-        };
-        
-        displayQuestion(questionData);
-        
-        // Simulate timer
-        let timeLeft = 15;
-        updateTimer(timeLeft);
-        const timerInterval = setInterval(() => {
-          timeLeft--;
-          updateTimer(timeLeft);
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            // Auto advance if no answer given
-            if (!Array.from(optionsContainer.children).some(btn => btn.disabled)) {
-              currentQuestionIndex++;
-              if (currentQuestionIndex < fallbackQuestions.length) {
-                setTimeout(() => displayOfflineQuestion(), 1000);
-              } else {
-                endQuiz();
-              }
-            }
-          }
-        }, 1000);
-      }
+        if (currentQuestionIndex < fallbackQuestions.length) {
+            const questionData = {
+                question: fallbackQuestions[currentQuestionIndex].question,
+                options: fallbackQuestions[currentQuestionIndex].options,
+                questionNumber: currentQuestionIndex + 1
+            };
+            
+            displayQuestion(questionData);
+            
+            let timeLeft = 15;
+            updateTimer(timeLeft);
+            
+            if (offlineTimer) clearInterval(offlineTimer);
+            offlineTimer = setInterval(() => {
+                timeLeft--;
+                updateTimer(timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(offlineTimer);
+                    // Auto advance if no answer given
+                    if (!Array.from(optionsContainer.children).some(btn => btn.disabled)) {
+                        currentQuestionIndex++;
+                        if (currentQuestionIndex < fallbackQuestions.length) {
+                            setTimeout(() => displayOfflineQuestion(), 1000);
+                        } else {
+                            endQuiz();
+                        }
+                    }
+                }
+            }, 1000);
+        }
     }
 
     function endQuiz() {
@@ -566,6 +559,7 @@
       leaderboardTitle.textContent = "Final Leaderboard";
       timerDisplay.style.display = 'none';
       quizStarted = false;
+      if (offlineTimer) clearInterval(offlineTimer);
     }
 
     function updateLeaderboard(serverUsers) {
@@ -589,7 +583,6 @@
       });
     }
 
-    // Register button click handler
     registerButton.addEventListener('click', () => {
       const userName = usernameInput.value.trim();
       if (!userName) {
@@ -606,7 +599,6 @@
         console.log('Attempting to register user:', userName);
         socket.emit('register', userName);
       } else {
-        // Offline mode
         users.push(currentUser);
         updateLeaderboard(users);
         
@@ -621,26 +613,26 @@
       }
     });
 
-    // Enter key support for username input
     usernameInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         registerButton.click();
       }
     });
 
-    // Initialize the application
-    document.addEventListener('DOMContentLoaded', () => {
-      initializeConnection();
-    });
-
     // Load socket.io script dynamically with fallback
-    const script = document.createElement('script');
-    script.src = 'https://gdg-on-campus-quiz.onrender.com/socket.io/socket.io.js';
-    script.onerror = () => {
-      console.log('Failed to load socket.io - running in offline mode');
-      startOfflineMode();
-    };
-    document.head.appendChild(script);
+    document.addEventListener('DOMContentLoaded', () => {
+      const script = document.createElement('script');
+      script.src = 'https://gdg-on-campus-quiz.onrender.com/socket.io/socket.io.js';
+      
+      // Use onload to ensure script is loaded before initialization
+      script.onload = initializeConnection;
+      script.onerror = () => {
+        console.log('Failed to load socket.io script - running in offline mode');
+        startOfflineMode();
+        initializeConnection(); // Still call initialize to setup the rest
+      };
+      document.head.appendChild(script);
+    });
   </script>
 </body>
 </html>
