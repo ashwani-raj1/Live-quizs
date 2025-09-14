@@ -16,7 +16,15 @@ const io = new Server(server, {
     }
 });
 
+// Store connected users
 const users = [];
+let gameState = {
+    quizActive: false,
+    currentQuestionIndex: 0,
+    questionTimer: null,
+    countdownInterval: null,
+    waitingForPlayers: true
+};
 
 const quizQuestions = [
   {
@@ -71,72 +79,316 @@ const quizQuestions = [
   }
 ];
 
-let currentQuestionIndex = 0;
-let quizActive = false;
-let questionTimer = null;
-let countdownInterval = null;
-const QUESTION_DURATION = 15000;
+const QUESTION_DURATION = 15000; // 15 seconds
+const QUIZ_START_DELAY = 5000; // 5 seconds delay before starting quiz
+
+function clearTimers() {
+  if (gameState.questionTimer) {
+    clearTimeout(gameState.questionTimer);
+    gameState.questionTimer = null;
+  }
+  if (gameState.countdownInterval) {
+    clearInterval(gameState.countdownInterval);
+    gameState.countdownInterval = null;
+  }
+}
 
 function sendNextQuestion() {
-  if (questionTimer) clearTimeout(questionTimer);
-  if (countdownInterval) clearInterval(countdownInterval);
+  clearTimers();
 
-  if (currentQuestionIndex < quizQuestions.length) {
-    const questionData = quizQuestions[currentQuestionIndex];
+  if (gameState.currentQuestionIndex < quizQuestions.length) {
+    const questionData = quizQuestions[gameState.currentQuestionIndex];
     const questionToSend = {
       question: questionData.question,
       options: questionData.options,
-      questionNumber: currentQuestionIndex + 1
+      questionNumber: gameState.currentQuestionIndex + 1,
+      totalQuestions: quizQuestions.length
     };
     
+    console.log(`Sending Question ${gameState.currentQuestionIndex + 1}: ${questionData.question}`);
+    
+    // Reset user answers for this question
+    users.forEach(user => {
+      user.hasAnswered = false;
+    });
+    
+    // Start countdown timer
     let timeLeft = QUESTION_DURATION / 1000;
     io.emit('timerUpdate', timeLeft);
+    io.emit('newQuestion', questionToSend);
 
-    countdownInterval = setInterval(() => {
+    gameState.countdownInterval = setInterval(() => {
         timeLeft--;
         io.emit('timerUpdate', timeLeft);
+        
+        if (timeLeft <= 0) {
+          clearInterval(gameState.countdownInterval);
+        }
     }, 1000);
 
-    io.emit('newQuestion', questionToSend);
-    console.log(`Sending Question ${currentQuestionIndex + 1}: ${questionData.question}`);
-
-    questionTimer = setTimeout(() => {
-      clearInterval(countdownInterval);
-      currentQuestionIndex++;
+    // Set timeout for next question
+    gameState.questionTimer = setTimeout(() => {
+      gameState.currentQuestionIndex++;
       sendNextQuestion();
     }, QUESTION_DURATION);
 
   } else {
-    quizActive = false;
-    io.emit('quizFinished');
-    console.log('Quiz finished!');
+    // Quiz finished
+    endQuiz();
   }
+}
+
+function endQuiz() {
+  gameState.quizActive = false;
+  clearTimers();
+  
+  console.log('Quiz finished!');
+  console.log('Final scores:', users.map(u => `${u.name}: ${u.score}`));
+  
+  io.emit('quizFinished');
+  io.emit('updateLeaderboard', users);
+  
+  // Reset for next game
+  setTimeout(() => {
+    resetGame();
+  }, 30000); // Reset after 30 seconds
+}
+
+function resetGame() {
+  gameState = {
+    quizActive: false,
+    currentQuestionIndex: 0,
+    questionTimer: null,
+    countdownInterval: null,
+    waitingForPlayers: true
+  };
+  
+  // Reset all user scores
+  users.forEach(user => {
+    user.score = 0;
+    user.hasAnswered = false;
+  });
+  
+  io.emit('gameReset');
+  console.log('Game reset - ready for new players');
+}
+
+function startQuizCountdown() {
+  if (gameState.quizActive || !gameState.waitingForPlayers) return;
+  
+  gameState.waitingForPlayers = false;
+  console.log('Starting quiz countdown...');
+  
+  io.emit('quizStarting', { countdown: QUIZ_START_DELAY / 1000 });
+  
+  setTimeout(() => {
+    if (users.length > 0) {
+      gameState.quizActive = true;
+      gameState.currentQuestionIndex = 0;
+      console.log('Quiz starting with', users.length, 'players');
+      sendNextQuestion();
+    } else {
+      gameState.waitingForPlayers = true;
+      console.log('No players found, resetting to waiting state');
+    }
+  }, QUIZ_START_DELAY);
 }
 
 function handleAnswer(socket, answer) {
-  if (!quizActive || currentQuestionIndex >= quizQuestions.length) return;
+  if (!gameState.quizActive || gameState.currentQuestionIndex >= quizQuestions.length) {
+    console.log('Answer submitted but quiz not active or finished');
+    return;
+  }
 
-  const correctAnswer = quizQuestions[currentQuestionIndex].answer;
   const user = users.find(u => u.id === socket.id);
+  if (!user) {
+    console.log('User not found for answer submission');
+    return;
+  }
+  
+  if (user.hasAnswered) {
+    console.log(`${user.name} already answered this question`);
+    return;
+  }
+
+  const correctAnswer = quizQuestions[gameState.currentQuestionIndex].answer;
   const isCorrect = (answer === correctAnswer);
   
-  if (user && isCorrect) {
+  user.hasAnswered = true;
+  
+  if (isCorrect) {
     const points = 10;
     user.score += points;
     console.log(`${user.name} got the correct answer! New score: ${user.score}`);
-    io.emit('updateLeaderboard', users);
   } else {
-    console.log(`${user.name} answered incorrectly or too late.`);
+    console.log(`${user.name} answered incorrectly. Answer was: ${answer}, Correct: ${correctAnswer}`);
   }
 
+  // Send result to the specific user
   socket.emit('answerResult', { isCorrect, correctAnswer });
+  
+  // Update leaderboard for all users
+  io.emit('updateLeaderboard', users);
+  
+  // Check if all users have answered
+  const allAnswered = users.every(u => u.hasAnswered);
+  if (allAnswered) {
+    console.log('All users answered - moving to next question');
+    clearTimers();
+    setTimeout(() => {
+      gameState.currentQuestionIndex++;
+      sendNextQuestion();
+    }, 2000); // 2 second delay to show results
+  }
 }
 
+function removeUser(socketId) {
+  const userIndex = users.findIndex(u => u.id === socketId);
+  if (userIndex !== -1) {
+    const removedUser = users.splice(userIndex, 1)[0];
+    console.log(`User disconnected: ${removedUser.name}`);
+    io.emit('updateLeaderboard', users);
+    
+    // If no users left and quiz is active, reset the game
+    if (users.length === 0 && gameState.quizActive) {
+      console.log('No users left - resetting game');
+      endQuiz();
+    }
+  }
+}
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('New connection:', socket.id);
+  
+  // Send current game state to new connection
+  socket.emit('gameState', {
+    quizActive: gameState.quizActive,
+    waitingForPlayers: gameState.waitingForPlayers,
+    userCount: users.length
+  });
+  
+  socket.emit('updateLeaderboard', users);
+
+  socket.on('register', (userName) => {
+    if (!userName || typeof userName !== 'string') {
+      socket.emit('registrationError', 'Invalid username');
+      return;
+    }
+    
+    // Check if username already exists
+    const existingUser = users.find(u => u.name === userName);
+    if (existingUser) {
+      socket.emit('registrationError', 'Username already taken');
+      return;
+    }
+    
+    const user = { 
+      id: socket.id, 
+      name: userName.trim(), 
+      score: 0,
+      hasAnswered: false 
+    };
+    
+    users.push(user);
+    console.log(`User registered: ${userName} (Total users: ${users.length})`);
+    
+    socket.emit('registrationSuccess', user);
+    io.emit('updateLeaderboard', users);
+    
+    // Start quiz countdown if this is the first user and we're waiting
+    if (users.length === 1 && gameState.waitingForPlayers && !gameState.quizActive) {
+      startQuizCountdown();
+    }
+  });
+
+  socket.on('submitAnswer', (answer) => {
+    handleAnswer(socket, answer);
+  });
+  
+  socket.on('adminStartQuiz', () => {
+    // Admin command to start quiz immediately
+    if (!gameState.quizActive && users.length > 0) {
+      gameState.waitingForPlayers = false;
+      gameState.quizActive = true;
+      gameState.currentQuestionIndex = 0;
+      console.log('Admin started quiz with', users.length, 'players');
+      sendNextQuestion();
+    }
+  });
+  
+  socket.on('adminResetQuiz', () => {
+    // Admin command to reset quiz
+    console.log('Admin reset quiz');
+    endQuiz();
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+    removeUser(socket.id);
+  });
+  
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
+  });
+});
+
+// Express routes
 app.get('/', (req, res) => {
-  res.send('Server is running. Access the frontend via GitHub Pages.');
+  res.json({
+    message: 'Google GDG Quiz Server is running!',
+    status: 'active',
+    users: users.length,
+    quizActive: gameState.quizActive,
+    currentQuestion: gameState.currentQuestionIndex + 1,
+    totalQuestions: quizQuestions.length
+  });
+});
+
+app.get('/stats', (req, res) => {
+  res.json({
+    connectedUsers: users.length,
+    gameState: {
+      quizActive: gameState.quizActive,
+      currentQuestionIndex: gameState.currentQuestionIndex,
+      waitingForPlayers: gameState.waitingForPlayers
+    },
+    leaderboard: users.sort((a, b) => b.score - a.score)
+  });
+});
+
+app.get('/reset', (req, res) => {
+  resetGame();
+  res.json({ message: 'Game reset successfully' });
+});
+
+// Error handling
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    process.exit(0);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Google GDG Quiz Server is running on port ${PORT}`);
+  console.log(`📊 Access stats at: http://localhost:${PORT}/stats`);
+  console.log(`🔄 Reset game at: http://localhost:${PORT}/reset`);
 });

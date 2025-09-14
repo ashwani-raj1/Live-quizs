@@ -21,34 +21,47 @@
 
     body {
       font-family: 'Roboto', sans-serif;
-      background-color: var(--dark-bg);
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       color: var(--text-color);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       margin: 0;
-      
-      background-image: url('https://googleusercontent.com/image_collection/image_retrieval/16221347123575330833');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 25% 25%, rgba(66, 133, 244, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 75% 75%, rgba(52, 168, 83, 0.1) 0%, transparent 50%);
+      pointer-events: none;
     }
 
     .container {
       width: 100%;
       max-width: 700px;
-      padding: 30px;
+      padding: 40px;
       text-align: center;
-      background-color: rgba(41, 42, 45, 0.95);
+      background: rgba(41, 42, 45, 0.95);
       border-radius: var(--border-radius);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
     }
     
     .logo {
-        width: 100px;
+        width: 120px;
         margin-bottom: 20px;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
     }
 
     h1, h2 {
@@ -58,16 +71,38 @@
       margin-bottom: 20px;
     }
     
-    h1 { font-weight: 700; }
+    h1 { 
+      font-weight: 700; 
+      font-size: 2.5em;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
     h2 { font-weight: 500; }
     
+    #connection-status {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    
+    #connection-status.connected {
+      background-color: rgba(52, 168, 83, 0.2);
+      color: var(--google-green);
+    }
+    
+    #connection-status.disconnected {
+      background-color: rgba(234, 67, 53, 0.2);
+      color: var(--google-red);
+    }
+    
     #timer-display {
-      font-size: 3em;
+      font-size: 4em;
       font-weight: 700;
       color: var(--google-yellow);
       margin-top: -10px;
-      margin-bottom: 20px;
-      transition: color 0.5s;
+      margin-bottom: 30px;
+      transition: color 0.5s, transform 0.3s;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
     
     #timer-display.low-time {
@@ -77,7 +112,7 @@
 
     @keyframes pulse {
       0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+      50% { transform: scale(1.1); }
       100% { transform: scale(1); }
     }
 
@@ -86,38 +121,40 @@
     }
 
     #username-input {
-      padding: 12px 15px;
+      padding: 15px 20px;
       width: 70%;
       max-width: 300px;
-      border: 1px solid #5F6368;
-      background-color: transparent;
-      border-radius: 8px;
+      border: 2px solid #5F6368;
+      background-color: rgba(60, 64, 67, 0.3);
+      border-radius: 12px;
       color: var(--text-color);
       font-size: 16px;
-      transition: border-color 0.3s;
+      transition: border-color 0.3s, background-color 0.3s;
+      margin-bottom: 15px;
     }
 
     #username-input:focus {
       outline: none;
       border-color: var(--google-blue);
+      background-color: rgba(60, 64, 67, 0.5);
     }
 
     .btn {
-      padding: 12px 25px;
+      padding: 15px 30px;
       border: none;
-      background-color: var(--google-blue);
+      background: linear-gradient(135deg, var(--google-blue) 0%, #6a9cfd 100%);
       color: var(--text-color);
       font-size: 16px;
       font-weight: 500;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: transform 0.2s, background-color 0.2s;
-      margin-left: 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      background-color: #6a9cfd;
+      box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
     }
     
     .btn:active {
@@ -132,13 +169,14 @@
     }
 
     #question-text {
-      font-size: 24px;
-      font-weight: 400;
-      min-height: 70px;
+      font-size: 26px;
+      font-weight: 500;
+      min-height: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0;
+      margin: 0 0 30px 0;
+      line-height: 1.4;
     }
 
     #options-container {
@@ -148,34 +186,55 @@
     }
 
     .option-button {
-      background-color: #3C4043;
-      border: none;
+      background: linear-gradient(135deg, #3C4043 0%, #5F6368 100%);
+      border: 2px solid transparent;
       color: var(--text-color);
       font-size: 16px;
-      font-weight: 400;
-      padding: 15px;
-      border-radius: 8px;
+      font-weight: 500;
+      padding: 18px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background-color 0.2s, border 0.2s;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .option-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    .option-button:hover:not([disabled])::before {
+      left: 100%;
     }
 
     .option-button:hover:not([disabled]) {
-      background-color: #5F6368;
+      background: linear-gradient(135deg, #5F6368 0%, #80868B 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     
     .option-button:disabled {
         cursor: not-allowed;
-        opacity: 0.6;
+        opacity: 0.7;
     }
 
     .option-button.correct {
-        background-color: var(--google-green);
+        background: linear-gradient(135deg, var(--google-green) 0%, #4CAF50 100%);
         border: 2px solid var(--google-green);
+        box-shadow: 0 4px 15px rgba(52, 168, 83, 0.3);
     }
     
     .option-button.incorrect {
-        background-color: var(--google-red);
+        background: linear-gradient(135deg, var(--google-red) 0%, #F44336 100%);
         border: 2px solid var(--google-red);
+        box-shadow: 0 4px 15px rgba(234, 67, 53, 0.3);
     }
 
     #leaderboard {
@@ -188,34 +247,64 @@
       margin: 0;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     #leaderboard-list li {
-      background-color: var(--dark-bg);
-      padding: 15px;
-      border-radius: 8px;
+      background: linear-gradient(135deg, var(--dark-bg) 0%, #2d2e31 100%);
+      padding: 18px;
+      border-radius: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 18px;
       font-weight: 500;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: transform 0.2s;
     }
     
-    #leaderboard-list li:nth-child(1) { color: var(--google-blue); }
-    #leaderboard-list li:nth-child(2) { color: var(--google-green); }
-    #leaderboard-list li:nth-child(3) { color: var(--google-yellow); }
+    #leaderboard-list li:hover {
+      transform: translateY(-1px);
+    }
+    
+    #leaderboard-list li:nth-child(1) { 
+      color: var(--google-blue); 
+      box-shadow: 0 4px 15px rgba(66, 133, 244, 0.2);
+    }
+    #leaderboard-list li:nth-child(2) { 
+      color: var(--google-green); 
+      box-shadow: 0 4px 15px rgba(52, 168, 83, 0.2);
+    }
+    #leaderboard-list li:nth-child(3) { 
+      color: var(--google-yellow); 
+      box-shadow: 0 4px 15px rgba(251, 188, 5, 0.2);
+    }
+
+    .waiting-message {
+      font-size: 18px;
+      color: var(--google-yellow);
+      margin-top: 20px;
+      animation: fadeInOut 2s infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
 
   </style>
 </head>
 <body>
   <div class="container">
     <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google Logo" class="logo">
-    <h1>Google GDG Live</h1>
+    <h1>Google GDG Live Quiz</h1>
+    
+    <div id="connection-status" class="disconnected">Connecting to server...</div>
 
     <div id="registration-container">
-      <input type="text" id="username-input" placeholder="Enter your name">
+      <input type="text" id="username-input" placeholder="Enter your name to join">
+      <br>
       <button id="register-button" class="btn">Join the Quiz</button>
     </div>
 
@@ -233,10 +322,37 @@
     </div>
   </div>
   
-  <script src="https://gdg-on-campus-quiz.onrender.com/socket.io/socket.io.js"></script>
   <script>
-    const socket = io("https://gdg-on-campus-quiz.onrender.com");
+    // Fallback quiz questions for demo/offline mode
+    const fallbackQuestions = [
+      {
+        question: "What was Google's original name?",
+        options: ["SearchEngine", "BackRub", "Googolplex", "The Answer"],
+        answer: "BackRub"
+      },
+      {
+        question: "What year was Google founded?",
+        options: ["1996", "1998", "2000", "2004"],
+        answer: "1998"
+      },
+      {
+        question: "What is the name of Google's operating system for mobile devices?",
+        options: ["Chrome OS", "Android", "Google Phone OS", "Flutter"],
+        answer: "Android"
+      },
+      {
+        question: "Who co-founded Google with Larry Page?",
+        options: ["Elon Musk", "Steve Wozniak", "Sergey Brin", "Bill Gates"],
+        answer: "Sergey Brin"
+      },
+      {
+        question: "What is the name of the company that owns Google?",
+        options: ["Alphabet Inc.", "Microsoft", "Meta", "Google X"],
+        answer: "Alphabet Inc."
+      }
+    ];
 
+    // DOM elements
     const registrationContainer = document.getElementById('registration-container');
     const registerButton = document.getElementById('register-button');
     const usernameInput = document.getElementById('username-input');
@@ -246,30 +362,110 @@
     const optionsContainer = document.getElementById('options-container');
     const leaderboardTitle = document.getElementById('leaderboard-title');
     const timerDisplay = document.getElementById('timer-display');
+    const connectionStatus = document.getElementById('connection-status');
 
-    registerButton.addEventListener('click', () => {
-      const userName = usernameInput.value.trim();
-      if (userName) {
-        console.log('Attempting to register user:', userName);
-        socket.emit('register', userName);
-        registrationContainer.style.display = 'none';
-        quizContainer.style.display = 'block';
-        leaderboardTitle.textContent = "Live Leaderboard";
-      } else {
-        alert('Please enter a name!');
+    // Quiz state
+    let currentUser = null;
+    let users = [];
+    let socket = null;
+    let isConnected = false;
+    let currentQuestionIndex = 0;
+    let quizStarted = false;
+    let offlineMode = false;
+
+    // Initialize connection
+    function initializeConnection() {
+      try {
+        socket = io("https://gdg-on-campus-quiz.onrender.com", {
+          timeout: 5000,
+          forceNew: true
+        });
+
+        socket.on('connect', () => {
+          console.log('Connected to server');
+          isConnected = true;
+          connectionStatus.textContent = 'Connected to server';
+          connectionStatus.className = 'connected';
+        });
+
+        socket.on('disconnect', () => {
+          console.log('Disconnected from server');
+          isConnected = false;
+          connectionStatus.textContent = 'Disconnected from server - Running in demo mode';
+          connectionStatus.className = 'disconnected';
+          if (!offlineMode) {
+            startOfflineMode();
+          }
+        });
+
+        socket.on('connect_error', (error) => {
+          console.error('Connection error:', error);
+          connectionStatus.textContent = 'Connection failed - Running in demo mode';
+          connectionStatus.className = 'disconnected';
+          if (!offlineMode) {
+            startOfflineMode();
+          }
+        });
+
+        // Socket event listeners
+        socket.on('timerUpdate', (timeLeft) => {
+          updateTimer(timeLeft);
+        });
+
+        socket.on('newQuestion', (questionData) => {
+          displayQuestion(questionData);
+        });
+        
+        socket.on('answerResult', ({ isCorrect, correctAnswer }) => {
+          showAnswerResult(isCorrect, correctAnswer);
+        });
+
+        socket.on('quizFinished', () => {
+          endQuiz();
+        });
+
+        socket.on('updateLeaderboard', (serverUsers) => {
+          updateLeaderboard(serverUsers);
+        });
+
+        // Timeout for connection
+        setTimeout(() => {
+          if (!isConnected && !offlineMode) {
+            console.log('Connection timeout - starting offline mode');
+            startOfflineMode();
+          }
+        }, 10000);
+
+      } catch (error) {
+        console.error('Failed to initialize socket connection:', error);
+        startOfflineMode();
       }
-    });
+    }
 
-    socket.on('timerUpdate', (timeLeft) => {
-        timerDisplay.textContent = timeLeft;
-        if (timeLeft <= 5) {
-            timerDisplay.classList.add('low-time');
-        } else {
-            timerDisplay.classList.remove('low-time');
-        }
-    });
+    function startOfflineMode() {
+      offlineMode = true;
+      connectionStatus.textContent = 'Demo Mode - Experience the quiz locally';
+      connectionStatus.className = 'disconnected';
+      
+      // Add some demo users to leaderboard
+      users = [
+        { name: 'Demo Player 1', score: 30 },
+        { name: 'Demo Player 2', score: 20 },
+        { name: 'Demo Player 3', score: 10 }
+      ];
+      updateLeaderboard(users);
+    }
 
-    socket.on('newQuestion', (questionData) => {
+    function updateTimer(timeLeft) {
+      timerDisplay.textContent = timeLeft;
+      if (timeLeft <= 5) {
+        timerDisplay.classList.add('low-time');
+      } else {
+        timerDisplay.classList.remove('low-time');
+      }
+    }
+
+    function displayQuestion(questionData) {
       questionText.textContent = `Question ${questionData.questionNumber}: ${questionData.question}`;
       optionsContainer.innerHTML = '';
       
@@ -279,41 +475,172 @@
         button.textContent = option;
         
         button.addEventListener('click', () => {
-          socket.emit('submitAnswer', option);
-          Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+          handleAnswerClick(option);
         });
         
         optionsContainer.appendChild(button);
       });
-    });
-    
-    socket.on('answerResult', ({ isCorrect, correctAnswer }) => {
-      const clickedButton = Array.from(optionsContainer.children).find(btn => !btn.disabled);
-      
-      if (isCorrect) {
-        if (clickedButton) clickedButton.classList.add('correct');
-      } else {
-        if (clickedButton) clickedButton.classList.add('incorrect');
-      }
-    });
+    }
 
-    socket.on('quizFinished', () => {
+    function handleAnswerClick(answer) {
+      // Disable all buttons
+      Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+      
+      if (isConnected && socket) {
+        socket.emit('submitAnswer', answer);
+      } else {
+        // Offline mode - simulate answer checking
+        const currentQuestion = fallbackQuestions[currentQuestionIndex];
+        const isCorrect = answer === currentQuestion.answer;
+        
+        if (isCorrect && currentUser) {
+          currentUser.score += 10;
+          // Update user in users array
+          const userIndex = users.findIndex(u => u.name === currentUser.name);
+          if (userIndex >= 0) {
+            users[userIndex] = currentUser;
+          }
+          updateLeaderboard(users);
+        }
+        
+        showAnswerResult(isCorrect, currentQuestion.answer);
+        
+        // Auto advance to next question after 2 seconds
+        setTimeout(() => {
+          currentQuestionIndex++;
+          if (currentQuestionIndex < fallbackQuestions.length) {
+            displayOfflineQuestion();
+          } else {
+            endQuiz();
+          }
+        }, 2000);
+      }
+    }
+
+    function showAnswerResult(isCorrect, correctAnswer) {
+      const buttons = Array.from(optionsContainer.children);
+      buttons.forEach(btn => {
+        if (btn.textContent === correctAnswer) {
+          btn.classList.add('correct');
+        } else if (btn.disabled && btn.textContent !== correctAnswer) {
+          btn.classList.add('incorrect');
+        }
+      });
+    }
+
+    function displayOfflineQuestion() {
+      if (currentQuestionIndex < fallbackQuestions.length) {
+        const questionData = {
+          question: fallbackQuestions[currentQuestionIndex].question,
+          options: fallbackQuestions[currentQuestionIndex].options,
+          questionNumber: currentQuestionIndex + 1
+        };
+        
+        displayQuestion(questionData);
+        
+        // Simulate timer
+        let timeLeft = 15;
+        updateTimer(timeLeft);
+        const timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimer(timeLeft);
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            // Auto advance if no answer given
+            if (!Array.from(optionsContainer.children).some(btn => btn.disabled)) {
+              currentQuestionIndex++;
+              if (currentQuestionIndex < fallbackQuestions.length) {
+                setTimeout(() => displayOfflineQuestion(), 1000);
+              } else {
+                endQuiz();
+              }
+            }
+          }
+        }, 1000);
+      }
+    }
+
+    function endQuiz() {
       questionText.textContent = "The quiz has ended! Final scores are below.";
       optionsContainer.innerHTML = '';
       leaderboardTitle.textContent = "Final Leaderboard";
       timerDisplay.style.display = 'none';
-    });
+      quizStarted = false;
+    }
 
-    socket.on('updateLeaderboard', (users) => {
+    function updateLeaderboard(serverUsers) {
       leaderboardList.innerHTML = '';
-      const sortedUsers = users.sort((a, b) => b.score - a.score);
+      const sortedUsers = serverUsers.sort((a, b) => b.score - a.score);
 
-      sortedUsers.forEach(user => {
+      if (sortedUsers.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.textContent = 'No players yet...';
+        emptyItem.style.opacity = '0.6';
+        leaderboardList.appendChild(emptyItem);
+        return;
+      }
+
+      sortedUsers.forEach((user, index) => {
         const listItem = document.createElement('li');
-        listItem.textContent = `${user.name}: ${user.score}`;
+        const position = index + 1;
+        const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : `${position}.`;
+        listItem.textContent = `${medal} ${user.name}: ${user.score} points`;
         leaderboardList.appendChild(listItem);
       });
+    }
+
+    // Register button click handler
+    registerButton.addEventListener('click', () => {
+      const userName = usernameInput.value.trim();
+      if (!userName) {
+        alert('Please enter your name!');
+        return;
+      }
+
+      currentUser = { name: userName, score: 0 };
+      registrationContainer.style.display = 'none';
+      quizContainer.style.display = 'block';
+      leaderboardTitle.textContent = "Live Leaderboard";
+
+      if (isConnected && socket) {
+        console.log('Attempting to register user:', userName);
+        socket.emit('register', userName);
+      } else {
+        // Offline mode
+        users.push(currentUser);
+        updateLeaderboard(users);
+        
+        if (!quizStarted) {
+          quizStarted = true;
+          questionText.textContent = "Get ready! The quiz will start in 3 seconds...";
+          setTimeout(() => {
+            currentQuestionIndex = 0;
+            displayOfflineQuestion();
+          }, 3000);
+        }
+      }
     });
+
+    // Enter key support for username input
+    usernameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        registerButton.click();
+      }
+    });
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeConnection();
+    });
+
+    // Load socket.io script dynamically with fallback
+    const script = document.createElement('script');
+    script.src = 'https://gdg-on-campus-quiz.onrender.com/socket.io/socket.io.js';
+    script.onerror = () => {
+      console.log('Failed to load socket.io - running in offline mode');
+      startOfflineMode();
+    };
+    document.head.appendChild(script);
   </script>
 </body>
 </html>
